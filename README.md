@@ -1,14 +1,14 @@
-# AssemblyOS - is Operating system that have ability to execute your assembly instructions easily
+## AssemblyOS - is Operating system that have ability to execute your assembly instructions easily
 
-## Requirements:
+# Requirements:
     * nasm
     * make
     * qemu-system-x86_64
 
-## Installation:
+# Installation:
     * Enter project directory and run `make`
 
-## Guide:
+# Guide:
     * How create your assembly instruction:
         1. Define opcode that is used for your assembly instruction (0x00-0xFF)
         2. Define name of the instruction
