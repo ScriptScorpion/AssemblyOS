@@ -2,9 +2,11 @@
 
 ## Requirements:
     * nasm
-    * g++
-## Installation:
+    * make
+    * qemu-system-x86_64
 
+## Installation:
+    * Enter project directory and run `make`
 
 ## Guide:
     * How create your assembly instruction:
