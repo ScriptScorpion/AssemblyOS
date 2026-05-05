@@ -1,14 +1,9 @@
-; boot.asm
 org 0x7C00
 bits 16
 
 cursor_pos dw 0
-boot_drive db 0
-null db 0
 
-_start:
-    jmp real_mode
-real_mode:
+_start: ; real mode
     ; clearing system registers
     cli
     xor ax, ax
@@ -16,7 +11,7 @@ real_mode:
     mov es, ax
     mov ss, ax
     
-    mov [boot_drive], dl
+    xor dl, dl
     
     ; clear screen
     mov ax, 0x03
@@ -39,7 +34,6 @@ real_mode:
 bits 32
 protected_mode:
     ; configuring system registers
-    cli
     mov ax, 0x10
     mov ds, ax
     mov es, ax
@@ -48,16 +42,16 @@ protected_mode:
     mov ss, ax
     
     ; Page Map Level 4 address 
-    mov edi, 0x1000
-    mov dword [edi], 0x2003 
+    mov eax, 0x1000
+    mov dword [eax], 0x2003 
     
     ; Page Directory Pointer Table address
-    mov edi, 0x2000
-    mov dword [edi], 0x3003  
+    mov eax, 0x2000
+    mov dword [eax], 0x3003  
     
     ; Page Directory address
-    mov edi, 0x3000
-    mov dword [edi], 0x0083 
+    mov eax, 0x3000
+    mov dword [eax], 0x0083 
     
     ; Page Map Level 4 address
     mov eax, 0x1000
@@ -84,7 +78,6 @@ protected_mode:
 bits 64
 long_mode:
     ; clearing system registers
-    cli
     xor al, al
     xor ax, ax
     mov ds, ax
@@ -92,7 +85,6 @@ long_mode:
     mov fs, ax
     mov gs, ax
     mov ss, ax
-    jmp main_code
 
 main_code:
     
@@ -118,21 +110,19 @@ main_code:
 
 
 seconds_delay:
-    push rax
     jmp .convert
     .convert:
-        imul rbx, 720000
-        jmp .loop
+        imul rbx, 735000
+    
     .loop:
         in al, 0x60 ; accepting input and then discarding it, so input data doesn't accumulate 
-        movzx rax, al
 
         test rbx, rbx
         jz .end
         dec rbx
         jmp .loop
+    
     .end:
-        pop rax
         ret
 
 wait_key:
@@ -160,8 +150,19 @@ move_cursor:
     inc BYTE [cursor_pos]
     cmp BYTE [cursor_pos], 254
     jae .limit_cursor
-    jmp .continue_cursor
+    
+    .continue_cursor:
+        mov dx, 0x3D4
+        mov al, 0x0F
+        out dx, al
+        mov dx, 0x3D5
+        mov al, BYTE [cursor_pos] ; position from the left
+        out dx, al
         
+        pop rdx
+        pop rax
+        ret
+
     .limit_cursor:
         dec BYTE [cursor_pos]
 
@@ -175,24 +176,14 @@ move_cursor:
         pop rdx
         pop rax
         ret
-    .continue_cursor:
-        mov dx, 0x3D4
-        mov al, 0x0F
-        out dx, al
-        mov dx, 0x3D5
-        mov al, BYTE [cursor_pos] ; position from the left
-        out dx, al
-        
-        pop rdx
-        pop rax
-        ret
+    
 
 check_enter:
     push rcx
     push rax
     ; minimum 0xB8000
     ; maximum 0xB8EFE
-    cmp al, 13 ; TODO FIX THIS
+    cmp al, 13
 
     jne .exit1
     
@@ -200,7 +191,6 @@ check_enter:
     mov cl, 0
     mov rax, 0xB8EFE
     mov [rax], cl
-    jmp .loop
     
     .loop:
         cmp rax, 0xB7FFE
@@ -216,14 +206,14 @@ check_enter:
     
     .exit2:
         
-        ;mov BYTE [cursor_pos], 0 ; TODO OPTIMIZE CODE SO IT WILL BE UNDER 512 bytes
-        ;mov dx, 0x3D4
-        ;mov al, 0x0F
-        ;out dx, al
+        mov BYTE [cursor_pos], 0 ; TODO OPTIMIZE CODE SO IT WILL BE UNDER 512 bytes
+        mov dx, 0x3D4
+        mov al, 0x0F
+        out dx, al
 
-        ;mov dx, 0x3D5
-        ;mov al, 0
-        ;out dx, al
+        mov dx, 0x3D5
+        mov al, 0
+        out dx, al
         
         pop rax
         pop rcx
