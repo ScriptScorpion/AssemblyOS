@@ -95,6 +95,7 @@ long_mode:
     jmp main_code
 
 main_code:
+    
     call wait_key
     test al, al
     jz main_code ; jump if zero
@@ -113,7 +114,9 @@ main_code:
     
     mov rbx, 1 ; pseudo second
     call seconds_delay
+    
     jmp main_code
+
 
 seconds_delay:
     push rax
@@ -142,8 +145,13 @@ wait_key:
     jnz wait_key
 
     in al, 0x60
+    test al, 0b10000000
+    jnz wait_key
+
     movzx rax, al
     mov al, [scan_to_ascii + rax]
+
+
     ret
 
 move_cursor:
