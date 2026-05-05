@@ -1,9 +1,9 @@
 ## AssemblyOS - is Operating system that have ability to execute your assembly instructions easily
 
 # Requirements:
-    * nasm
-    * make
-    * qemu-system-x86_64
+* nasm
+* make
+* qemu-system-x86_64
 
 # Installation:
 * Enter project directory and run `make`
