@@ -100,14 +100,13 @@ main_code:
     test al, al
     jz main_code ; jump if zero
     
-    ; minimum 0xB8000
-    ; maximum 0xB8EFE
-    
+    call check_enter
+
     mov ah, 0x0F
     mov rcx, 0xB8000
-    mov r9w, WORD [cursor_pos]
-    add r9w, r9w
-    add cx, r9w
+    mov dx, WORD [cursor_pos]
+    add dx, dx
+    add cx, dx
     mov [rcx], al
     
     call move_cursor
@@ -122,7 +121,7 @@ seconds_delay:
     push rax
     jmp .convert
     .convert:
-        imul rbx, 700000
+        imul rbx, 720000
         jmp .loop
     .loop:
         in al, 0x60 ; accepting input and then discarding it, so input data doesn't accumulate 
@@ -188,12 +187,55 @@ move_cursor:
         pop rax
         ret
 
+check_enter:
+    push rcx
+    push rax
+    ; minimum 0xB8000
+    ; maximum 0xB8EFE
+    cmp al, 13 ; TODO FIX THIS
+
+    jne .exit1
+    
+    mov ch, 0x0F
+    mov cl, 0
+    mov rax, 0xB8EFE
+    mov [rax], cl
+    jmp .loop
+    
+    .loop:
+        cmp rax, 0xB7FFE
+        jbe .exit2
+        mov [rax], cl
+        sub rax, 2
+        jmp .loop
+    
+    .exit1:
+        pop rax
+        pop rcx
+        ret
+    
+    .exit2:
+        
+        ;mov BYTE [cursor_pos], 0 ; TODO OPTIMIZE CODE SO IT WILL BE UNDER 512 bytes
+        ;mov dx, 0x3D4
+        ;mov al, 0x0F
+        ;out dx, al
+
+        ;mov dx, 0x3D5
+        ;mov al, 0
+        ;out dx, al
+        
+        pop rax
+        pop rcx
+        pop rbp
+        jmp main_code
+
 scan_to_ascii:
     db 0, 0 ; Error, Esc 
     db '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='
     db 0, 0 ; Backspace, Tab 
     db 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']'
-    db 0, 0 ; Enter, Left ctrl
+    db 13, 0 ; Enter, Left ctrl
     db 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', "'", '`'
     db 0 ; Left shift
     db '\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 
