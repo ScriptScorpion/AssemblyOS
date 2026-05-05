@@ -2,7 +2,7 @@
 org 0x7C00
 bits 16
 
-cursor_pos db 2
+cursor_pos dw 0
 boot_drive db 0
 null db 0
 
@@ -19,7 +19,7 @@ real_mode:
     mov [boot_drive], dl
     
     ; clear screen
-    mov ax, 0x0003
+    mov ax, 0x03
     int 0x10
     
     ; enabling access to memory more then 1MB
@@ -65,13 +65,13 @@ protected_mode:
     
     ; enabling Physical Address Extension
     mov eax, cr4
-    or eax, 0x00000020
+    or eax, 0x20
     mov cr4, eax
     
     ; enabling long mode using ESSR MSR
     mov ecx, 0xC0000080
     rdmsr
-    or eax, 0x00000100
+    or eax, 0x0100
     wrmsr
     
     ; enabling paging
@@ -97,32 +97,46 @@ long_mode:
 main_code:
     call wait_key
     test al, al
-    je main_code ; jump if equal to 0
+    jz main_code ; jump if zero
     
     ; minimum 0xB8000
     ; maximum 0xB8EFE
     
     mov ah, 0x0F
     mov rcx, 0xB8000
-    add cl, BYTE [cursor_pos-2] ; TODO -> fix that it doesnt follow cursor
+    mov r9w, WORD [cursor_pos]
+    add r9w, r9w
+    add cx, r9w
     mov [rcx], al
     
     call move_cursor
     
-    mov rax, 1 ; pseudo second
-    jmp seconds_delay
-
+    mov rbx, 1 ; pseudo second
+    call seconds_delay
+    jmp main_code
 
 seconds_delay:
+    push rax
+    jmp .convert
     .convert:
-        imul rax, 20000000
-    .loop:
-        test rax, rax
-        jbe main_code
-        dec rax
+        imul rbx, 700000
         jmp .loop
+    .loop:
+        in al, 0x60 ; accepting input and then discarding it, so input data doesn't accumulate 
+        movzx rax, al
+
+        test rbx, rbx
+        jz .end
+        dec rbx
+        jmp .loop
+    .end:
+        pop rax
+        ret
 
 wait_key:
+    mov rbx, 1
+    call seconds_delay
+    
     in al, 0x64
     test al, 2
     jnz wait_key
@@ -133,27 +147,35 @@ wait_key:
     ret
 
 move_cursor:
-
+    push rax
+    push rdx
+    
+    inc BYTE [cursor_pos]
     cmp BYTE [cursor_pos], 254
-    jae .stop_cursor
+    jae .limit_cursor
     jmp .continue_cursor
         
-    .stop_cursor:
-        ret
-    .continue_cursor:
-        push rax
-        push rdx
+    .limit_cursor:
+        dec BYTE [cursor_pos]
 
         mov dx, 0x3D4
         mov al, 0x0F
         out dx, al
         mov dx, 0x3D5
         mov al, BYTE [cursor_pos] ; position from the left
-        sub al, 1
+        out dx, al
+
+        pop rdx
+        pop rax
+        ret
+    .continue_cursor:
+        mov dx, 0x3D4
+        mov al, 0x0F
+        out dx, al
+        mov dx, 0x3D5
+        mov al, BYTE [cursor_pos] ; position from the left
         out dx, al
         
-        add BYTE [cursor_pos], 2
-
         pop rdx
         pop rax
         ret
