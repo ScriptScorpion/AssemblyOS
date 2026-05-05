@@ -206,7 +206,7 @@ check_enter:
     
     .exit2:
         
-        mov BYTE [cursor_pos], 0 ; TODO OPTIMIZE CODE SO IT WILL BE UNDER 512 bytes
+        mov BYTE [cursor_pos], 0 
         mov dx, 0x3D4
         mov al, 0x0F
         out dx, al
