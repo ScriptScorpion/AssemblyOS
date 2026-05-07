@@ -105,7 +105,7 @@ main_code:
     
     call check_needed_symbols
 
-    mov ah, 0x0F
+    mov ah, 0x0E
     mov rcx, 0x0B8000
     mov dx, WORD [cursor_pos]
     add dx, dx
@@ -114,6 +114,7 @@ main_code:
     
     call move_cursor
     
+    mov rbx, 6 ; controls how many time to wait before getting new characters
     call delay
     
     jmp main_code
@@ -121,7 +122,7 @@ main_code:
 
 delay:
     .convert:
-        mov rbx, 710000 ; lower number -> low delay, higher number -> high delay 
+        imul rbx, 150000 ; lower number -> low delay, higher number -> high delay
     .loop:
         in al, 0x60 ; accepting input and then discarding it, so input data doesn't accumulate 
 
@@ -134,6 +135,7 @@ delay:
         ret
 
 wait_key:
+    mov rbx, 3 ; controls how much time to wait before asking if new character inputted
     call delay
     
     in al, 0x64
@@ -193,7 +195,7 @@ check_needed_symbols:
     ; minimum 0x0B8000
     ; maximum 0x0B8EFE
     
-    mov ch, 0x0F
+    mov ch, 0x0E
     mov cl, 0
     
     cmp al, 13
@@ -201,7 +203,7 @@ check_needed_symbols:
     
     mov rax, 0x0B8EFE
     
-    .clear_char_loop:
+    .clear_char_loop: ; TODO -> Redo so it will execute command if it found one
         cmp rax, 0x0B7FFE
         jbe .clear_exit
         mov [rax], cl
@@ -316,6 +318,10 @@ gdt_end:
 gdt_descriptor:
     dw gdt_end - gdt_start - 1
     dd gdt_start
+
+
+%include "example.asm" ; TODO
+
 
 cursor_pos db 0
 
