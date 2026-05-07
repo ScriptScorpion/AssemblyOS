@@ -229,7 +229,7 @@ check_needed_symbols:
         cmp al, 8
         jne .exit1
         
-        cmp BYTE [cursor_pos], 0 ; if backslash is pressed we discard this symbol instead of printing trash
+        cmp BYTE [cursor_pos], 0 ; if backspace is pressed we discard this symbol instead of printing trash
         je .exit2
         
         mov rax, 0x0B8000
