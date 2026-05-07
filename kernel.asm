@@ -82,7 +82,7 @@ protected_mode:
 
 bits 64
 long_mode:
-    ; clearing system registers
+    ; clearing system and regular registers
     xor al, al
     xor ax, ax
     mov ds, ax
@@ -90,6 +90,13 @@ long_mode:
     mov fs, ax
     mov gs, ax
     mov ss, ax
+    xor rax, rax
+    xor rcx, rcx
+    xor rdx, rdx
+    xor rbx, rbx
+    xor rbp, rbp
+    xor rsi, rsi
+    xor rdi, rdi
 
 main_code:
     call wait_key
