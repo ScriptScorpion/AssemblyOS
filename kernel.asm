@@ -60,6 +60,7 @@ protected_mode:
     ; Page Map Level 4 address
     mov edi, 0x2000
     mov cr3, edi
+    xor edi, edi
 
     ; enabling Physical Address Extension
     mov eax, cr4
@@ -113,7 +114,7 @@ main_code:
 
 delay:
     .convert:
-        mov rbx, 715000 ; lower number -> low delay, higher number -> high delay 
+        mov rbx, 713000 ; lower number -> low delay, higher number -> high delay 
     .loop:
         in al, 0x60 ; accepting input and then discarding it, so input data doesn't accumulate 
 
