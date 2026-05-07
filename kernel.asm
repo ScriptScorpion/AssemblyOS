@@ -103,7 +103,7 @@ main_code:
     test al, al
     jz main_code ; jump if zero
     
-    call check_enter
+    call check_needed_symbols
 
     mov ah, 0x0F
     mov rcx, 0x0B8000
@@ -121,7 +121,7 @@ main_code:
 
 delay:
     .convert:
-        mov rbx, 713000 ; lower number -> low delay, higher number -> high delay 
+        mov rbx, 710000 ; lower number -> low delay, higher number -> high delay 
     .loop:
         in al, 0x60 ; accepting input and then discarding it, so input data doesn't accumulate 
 
@@ -185,52 +185,95 @@ move_cursor:
         ret
     
 
-check_enter:
+check_needed_symbols:
     push rcx
+    push rdx
     push rax
-    ; minimum 0xB8000
-    ; maximum 0xB8EFE
-    cmp al, 13
-
-    jne .exit1
+    
+    ; minimum 0x0B8000
+    ; maximum 0x0B8EFE
     
     mov ch, 0x0F
     mov cl, 0
-    mov rax, 0xB8EFE
-    mov [rax], cl
     
-    .loop:
-        cmp rax, 0xB7FFE
-        jbe .exit2
+    cmp al, 13
+    jne .backspace_char
+    
+    mov rax, 0x0B8EFE
+    
+    .clear_char_loop:
+        cmp rax, 0x0B7FFE
+        jbe .clear_exit
         mov [rax], cl
         sub rax, 2
-        jmp .loop
+        jmp .clear_char_loop
     
-    .exit1:
-        pop rax
-        pop rcx
-        ret
-    
-    .exit2:
-        
+     .clear_exit:
         mov BYTE [cursor_pos], 0 
         mov dx, 0x3D4
         mov al, 0x0F
         out dx, al
 
         mov dx, 0x3D5
-        mov al, 0
+        mov al, 0 ; new position of the cursor
         out dx, al
         
         pop rax
+        pop rdx
         pop rcx
-        pop rbp
+        pop rbp ; clear out the return address
         jmp main_code
 
+
+    .backspace_char:
+        cmp al, 8
+        jne .exit1
+        
+        cmp BYTE [cursor_pos], 0 ; if backslash is pressed we discard this symbol instead of printing trash
+        je .exit2
+        
+        mov rax, 0x0B8000
+
+        mov dx, WORD [cursor_pos]
+        add dx, dx
+        sub dx, 2
+        add ax, dx
+        mov [rax], cl
+
+        dec BYTE [cursor_pos] 
+
+        mov dx, 0x3D4
+        mov al, 0x0F
+        out dx, al
+
+        mov dx, 0x3D5
+        mov al, BYTE [cursor_pos] ; new position of the cursor
+        out dx, al
+        
+        pop rax
+        pop rdx
+        pop rcx
+        pop rbp ; clear out the return address
+        jmp main_code
+
+    .exit1:
+        pop rax
+        pop rdx
+        pop rcx
+        ret
+    
+    .exit2:
+        pop rax
+        pop rdx
+        pop rcx
+        pop rbp ; clear out the return address
+        jmp main_code
+    
+   
 scan_to_ascii:
     db 0, 0 ; Error, Esc 
     db '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='
-    db 0, 0 ; Backspace, Tab 
+    db 8, 0 ; Backspace, Tab 
     db 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']'
     db 13, 0 ; Enter, Left ctrl
     db 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', "'", '`'
@@ -277,4 +320,4 @@ gdt_descriptor:
 cursor_pos db 0
 
 
-times 2048-($-$$) db 0 ; SIZE (NOTE THAT IF SIZE WILL BE OVER 4096 BYTES, NEED TO CHANGE ADDRESSES in 'protected_mode' label)
+times 2048-($-$$) db 0 ; 512 > SIZE < 31744 (NOTE THAT IF SIZE WILL BE OVER 4096 BYTES, NEED TO CHANGE ADDRESSES in 'protected_mode' label)
