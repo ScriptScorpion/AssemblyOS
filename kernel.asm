@@ -1,16 +1,13 @@
-org 0x7C00
+org 0x1000
 bits 16
 
-cursor_pos dw 0
-
-_start: ; real mode
+real_mode: ; real mode
     ; clearing system registers
     cli
     xor ax, ax
     mov ds, ax
     mov es, ax
     mov ss, ax
-    
     xor dl, dl
     
     ; clear screen
@@ -41,22 +38,29 @@ protected_mode:
     mov gs, ax
     mov ss, ax
     
+    mov edi, 0x2000 ; DEPENDS ON SIZE
+    mov ecx, 0x1000
+    xor eax, eax
+    cld
+    rep stosd
+
     ; Page Map Level 4 address 
-    mov eax, 0x1000
-    mov dword [eax], 0x2003 
-    
+    mov edi, 0x2000
+    mov dword [edi], 0x3003 
+   
     ; Page Directory Pointer Table address
-    mov eax, 0x2000
-    mov dword [eax], 0x3003  
+    mov edi, 0x3000
+    mov dword [edi], 0x4003  
     
     ; Page Directory address
-    mov eax, 0x3000
-    mov dword [eax], 0x0083 
-    
+    mov edi, 0x4000
+    mov dword [edi], 0x0083 
+    ; mov dword [edi+8], 0x200083
+
     ; Page Map Level 4 address
-    mov eax, 0x1000
-    mov cr3, eax
-    
+    mov edi, 0x2000
+    mov cr3, edi
+
     ; enabling Physical Address Extension
     mov eax, cr4
     or eax, 0x20
@@ -65,12 +69,12 @@ protected_mode:
     ; enabling long mode using ESSR MSR
     mov ecx, 0xC0000080
     rdmsr
-    or eax, 0x0100
+    bts eax, 8
     wrmsr
     
     ; enabling paging
     mov eax, cr0
-    or eax, 0x80000000
+    bts eax, 31
     mov cr0, eax
     
     jmp 0x18:long_mode
@@ -87,7 +91,6 @@ long_mode:
     mov ss, ax
 
 main_code:
-    
     call wait_key
     test al, al
     jz main_code ; jump if zero
@@ -95,7 +98,7 @@ main_code:
     call check_enter
 
     mov ah, 0x0F
-    mov rcx, 0xB8000
+    mov rcx, 0x0B8000
     mov dx, WORD [cursor_pos]
     add dx, dx
     add cx, dx
@@ -103,17 +106,14 @@ main_code:
     
     call move_cursor
     
-    mov rbx, 1 ; pseudo second
-    call seconds_delay
+    call delay
     
     jmp main_code
 
 
-seconds_delay:
-    jmp .convert
+delay:
     .convert:
-        imul rbx, 735000
-    
+        mov rbx, 715000 ; lower number -> low delay, higher number -> high delay 
     .loop:
         in al, 0x60 ; accepting input and then discarding it, so input data doesn't accumulate 
 
@@ -126,8 +126,7 @@ seconds_delay:
         ret
 
 wait_key:
-    mov rbx, 1
-    call seconds_delay
+    call delay
     
     in al, 0x64
     test al, 2
@@ -256,7 +255,6 @@ gdt_start:
     ; Flags + Limit[19..16] = 0x20 -> 00100000
     ; G=0(limit * 0), D/B=0(16 bit instructions, needed for x64 mode), L=1 (64 bit code), Limit[19..16] = 0
     ; 
-
     dq 0x0000000000000000 ; NULL
     dq 0x00CF9A000000FFFF ; 32-bit code descriptor (exec/read).
     dq 0x00CF92000000FFFF ; 32-bit data descriptor (read/write).
@@ -268,5 +266,7 @@ gdt_descriptor:
     dw gdt_end - gdt_start - 1
     dd gdt_start
 
-times 510-($-$$) db 0
-dw 0xAA55
+cursor_pos db 0
+
+
+times 2048-($-$$) db 0 ; SIZE (NOTE THAT IF SIZE WILL BE OVER 4096 BYTES, NEED TO CHANGE ADDRESSES in 'protected_mode' label)
