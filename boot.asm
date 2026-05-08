@@ -16,7 +16,7 @@ _start:
 
     
     mov ah, 0x02        ; read sector function
-    mov al, 0x04        ; amount of sectors to read  (SIZE / 512)
+    mov al, 0x08        ; amount of sectors to read  (SIZE / 512)
     
     mov bx, 0x1000      ; Destination Offset
     mov dh, 0x00        ; Head 

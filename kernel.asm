@@ -428,4 +428,4 @@ gdt_descriptor:
 cursor_pos db 0
 
 
-times 2048-($-$$) db 0 ; 512 > SIZE < 31744 (NOTE THAT IF SIZE WILL BE OVER 4096 BYTES, NEED TO CHANGE ADDRESSES in 'protected_mode' label)
+times 4096-($-$$) db 0 ; 512 > SIZE < 31744 (NOTE THAT IF SIZE WILL BE OVER 4096 BYTES, NEED TO CHANGE ADDRESSES in 'protected_mode' label)
