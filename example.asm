@@ -6,7 +6,7 @@ main_function: ; DONT CHANGE THIS NAME
     push rbp
     mov rbp, rsp
     
-    mov WORD [rsp-4], 0x0F59 ; 0x0E - white text with white background, 0x59 - 'Y'
+    mov WORD [rsp-4], 0x0F59 ; 0x0F - white text with white background, 0x59 - 'Y'. More info about colors - https://en.wikipedia.org/wiki/BIOS_color_attributes
     
     mov r10w, WORD [rsp-4]
     

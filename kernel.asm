@@ -241,7 +241,7 @@ check_needed_symbols:
         pop rax
         pop rdx
         pop rcx
-        pop rbp ; clear out the return address 
+        pop rbp ; clear out the return address
         jmp main_code
 
     .test_next
