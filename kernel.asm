@@ -105,7 +105,7 @@ main_code:
     
     call check_needed_symbols
 
-    mov ah, 0x0E
+    mov ah, 0x0F
     mov rcx, 0x0B8000
     mov dx, WORD [cursor_pos]
     add dx, dx
@@ -195,37 +195,83 @@ check_needed_symbols:
     ; minimum 0x0B8000
     ; maximum 0x0B8EFE
     
-    mov ch, 0x0E
+    xor rdx, rdx
+    mov ch, 0x0E ; 0x0E and not 0x0F cuz of 0x0E can be printed even if error occured
     mov cl, 0
     
+    cmp al, 8
+    je .backspace_char
     cmp al, 13
-    jne .backspace_char
-    
-    mov rax, 0x0B8EFE
-    
-    .clear_char_loop: ; TODO -> Redo so it will execute command if it found one
-        cmp rax, 0x0B7FFE
-        jbe .clear_exit
-        mov [rax], cl
-        sub rax, 2
-        jmp .clear_char_loop
-    
-     .clear_exit:
-        mov BYTE [cursor_pos], 0 
-        mov dx, 0x3D4
-        mov al, 0x0F
-        out dx, al
+    jne .exit1
 
-        mov dx, 0x3D5
-        mov al, 0 ; new position of the cursor
-        out dx, al
+    .check_command_name:
+        mov rax, 0x0B8000
+        mov dx, [rax]
+        test dx, dx
+        jz .condition_call
+        xor rax, rax
+        xor rdx, rdx
+
+    .correct_name:
+        mov al, [YOUR_COMMAND_NAME + rdx]
+        mov rcx, 0x0B8000
+        add rcx, rdx
+        add rcx, rdx
+        mov ah, [rcx]
         
+        jmp .correct_name1
+
+        .correct_name1:
+            cmp al, ah
+            jz .correct_name2
+            jmp .correct_name3
+
+        .correct_name2:    
+            call .test_next
+            jmp .correct_name  
+        
+        .correct_name3:        
+            cmp al, ah
+            jne .condition_call
+            inc rdx
+            jmp .correct_name
+        
+    .condition_call:
+        call clear_all_chars
+        pop rax
+        pop rdx
+        pop rcx
+        pop rbp ; clear out the return address 
+        jmp main_code
+
+    .test_next
+        push rcx
+        push rax
+
+        inc rdx
+        mov al, [YOUR_COMMAND_NAME + rdx]
+        mov rcx, 0x0B8000
+        add rcx, rdx
+        add rcx, rdx
+        mov ah, [rcx]
+        
+        cmp al, ah
+        jz .execute_command
+        
+        pop rax
+        pop rcx
+        ret
+
+    .execute_command:
+        call clear_all_chars
+        call main_function
+        mov rbx, 5
+        call delay
         pop rax
         pop rdx
         pop rcx
         pop rbp ; clear out the return address
         jmp main_code
-
 
     .backspace_char:
         cmp al, 8
@@ -271,7 +317,37 @@ check_needed_symbols:
         pop rbp ; clear out the return address
         jmp main_code
     
-   
+
+clear_all_chars:
+    push rcx
+    push rdx
+    push rax
+    
+    mov rax, 0x0B8000
+    mov ch, 0x0E ; 0x0E and not 0x0F cuz of 0x0E can be printed even if error occured
+    mov cl, 0
+    .clear_loop:
+        cmp rax, 0x0B8EFE
+        jae .clear_exit
+        mov [rax], cl
+        add rax, 2
+        jmp .clear_loop
+    
+    .clear_exit:
+        mov BYTE [cursor_pos], 0 
+        mov dx, 0x3D4
+        mov al, 0x0F
+        out dx, al
+
+        mov dx, 0x3D5
+        mov al, 0 ; new position of the cursor
+        out dx, al
+        
+        pop rax
+        pop rdx
+        pop rcx
+        ret
+
 scan_to_ascii:
     db 0, 0 ; Error, Esc 
     db '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='
@@ -320,7 +396,7 @@ gdt_descriptor:
     dd gdt_start
 
 
-%include "example.asm" ; TODO
+%include "example.asm"
 
 
 cursor_pos db 0
