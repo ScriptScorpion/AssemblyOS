@@ -1,7 +1,6 @@
 ; preffer using r8-r15 registers and stack only
 
 YOUR_COMMAND_NAME: db "func", 0; string to type to execute your command
-
 main_function: ; DONT CHANGE THIS NAME
     push rbp
     mov rbp, rsp

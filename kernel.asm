@@ -190,6 +190,9 @@ move_cursor:
 check_needed_symbols:
     push rcx
     push rdx
+    push rbx
+    push rsi
+    push rdi
     push rax
     
     ; minimum 0x0B8000
@@ -239,6 +242,9 @@ check_needed_symbols:
     .condition_call:
         call clear_all_chars
         pop rax
+        pop rdi
+        pop rsi
+        pop rbx
         pop rdx
         pop rcx
         pop rbp ; clear out the return address
@@ -268,6 +274,9 @@ check_needed_symbols:
         mov rbx, 5
         call delay
         pop rax
+        pop rdi
+        pop rsi
+        pop rbx
         pop rdx
         pop rcx
         pop rbp ; clear out the return address
@@ -298,21 +307,30 @@ check_needed_symbols:
         mov al, BYTE [cursor_pos] ; new position of the cursor
         out dx, al
         
-        pop rax
-        pop rdx
+        pop rax 
+        pop rdi 
+        pop rsi 
+        pop rbx 
+        pop rdx 
         pop rcx
         pop rbp ; clear out the return address
         jmp main_code
 
     .exit1:
-        pop rax
-        pop rdx
+        pop rax 
+        pop rdi 
+        pop rsi 
+        pop rbx 
+        pop rdx 
         pop rcx
         ret
     
     .exit2:
-        pop rax
-        pop rdx
+        pop rax 
+        pop rdi 
+        pop rsi 
+        pop rbx 
+        pop rdx 
         pop rcx
         pop rbp ; clear out the return address
         jmp main_code
