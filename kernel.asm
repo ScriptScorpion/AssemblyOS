@@ -14,6 +14,14 @@ real_mode: ; real mode
     mov ax, 0x03
     int 0x10
     
+    ; set bright white color
+    mov al, 0
+    mov ah, 0x09
+    mov bh, 0x0
+    mov bl, 0x0F
+    mov cx, 0x0EFE
+    int 0x10
+
     ; enabling access to memory more then 1MB
     in al, 0x92
     or al, 2
@@ -250,7 +258,7 @@ check_needed_symbols:
         pop rbp ; clear out the return address
         jmp main_code
 
-    .test_next
+    .test_next:
         push rcx
         push rax
 
