@@ -112,7 +112,12 @@ main_code:
     jz main_code ; jump if zero
     
     call check_needed_symbols
-
+    
+    inc WORD [cursor_pos]
+    cmp WORD [cursor_pos], 254
+    dec WORD [cursor_pos]
+    jae main_code
+    
     mov ah, 0x0F
     mov rcx, 0x0B8000
     mov dx, WORD [cursor_pos]
@@ -165,35 +170,17 @@ move_cursor:
     push rdx
     
     inc WORD [cursor_pos]
-    cmp WORD [cursor_pos], 254
-    jae .limit_cursor
     
-    .continue_cursor:
-        mov dx, 0x3D4
-        mov al, 0x0F
-        out dx, al
-        mov dx, 0x3D5
-        mov ax, WORD [cursor_pos] ; position from the left
-        out dx, ax
-        
-        pop rdx
-        pop rax
-        ret
-
-    .limit_cursor:
-        dec WORD [cursor_pos]
-
-        mov dx, 0x3D4
-        mov al, 0x0F
-        out dx, al
-        mov dx, 0x3D5
-        mov ax, WORD [cursor_pos] ; position from the left
-        out dx, ax
-
-        pop rdx
-        pop rax
-        ret
+    mov dx, 0x3D4
+    mov al, 0x0F
+    out dx, al
+    mov dx, 0x3D5
+    mov ax, WORD [cursor_pos] ; position from the left
+    out dx, ax
     
+    pop rdx
+    pop rax
+    ret
 
 check_needed_symbols:
     push rcx
