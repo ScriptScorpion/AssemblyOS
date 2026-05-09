@@ -1,7 +1,7 @@
 ASM := nasm
 ASMF := -f bin
 KERN := kernel.asm
-BOOT := boot.asm
+BOOT := bootloader.asm
 OUT := os.img
 main:
 	@$(ASM) $(BOOT) $(ASMF) -o $(basename $(BOOT)).bin

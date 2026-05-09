@@ -1,4 +1,4 @@
-org 0x1000
+org 0x8000
 bits 16
 
 real_mode: ; real mode
@@ -46,27 +46,26 @@ protected_mode:
     mov gs, ax
     mov ss, ax
     
-    mov edi, 0x2000 ; DEPENDS ON SIZE
-    mov ecx, 0x1000
+    mov edi, 0x1000 ; offset to write Page table
+    mov ecx, 0x1000 ; size of the Page table
     xor eax, eax
     cld
     rep stosd
 
     ; Page Map Level 4 address 
-    mov edi, 0x2000
-    mov dword [edi], 0x3003 
+    mov edi, 0x1000
+    mov dword [edi], 0x2003 
    
     ; Page Directory Pointer Table address
-    mov edi, 0x3000
-    mov dword [edi], 0x4003  
+    mov edi, 0x2000
+    mov dword [edi], 0x3003  
     
     ; Page Directory address
-    mov edi, 0x4000
+    mov edi, 0x3000
     mov dword [edi], 0x0083 
-    ; mov dword [edi+8], 0x200083
 
     ; Page Map Level 4 address
-    mov edi, 0x2000
+    mov edi, 0x1000
     mov cr3, edi
     xor edi, edi
 
@@ -413,4 +412,4 @@ gdt_descriptor:
 cursor_pos dw 0
 
 
-times 4096-($-$$) db 0 ; 512 > SIZE < 31744 (NOTE THAT IF SIZE WILL BE OVER 4096 BYTES, NEED TO CHANGE ADDRESSES in 'protected_mode' label)
+times 4096-($-$$) db 0 ; SIZE (NOTE THAT IF YOU NEED TO CHANGE SIZE ALSO CHANGE AMOUNT OF SECTORS TO READ IN BOOTLOADER)

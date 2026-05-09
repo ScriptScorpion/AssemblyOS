@@ -18,7 +18,7 @@ _start:
     mov ah, 0x02        ; read sector function
     mov al, 0x08        ; amount of sectors to read  (SIZE / 512)
     
-    mov bx, 0x1000      ; Destination Offset
+    mov bx, 0x8000      ; Destination Offset
     mov dh, 0x00        ; Head 
     mov dl, [boot_drive]    ; BIOS drive number 
     mov ch, 0x00        ; Cylinder
@@ -29,7 +29,7 @@ _start:
     jc fail
     
     mov dl, [boot_drive]
-    jmp 0x0000:0x1000 ; jump to segment:offset
+    jmp 0x0000:0x8000 ; jump to segment:offset
 
     jmp $
 
