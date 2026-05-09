@@ -1,4 +1,4 @@
-## AssemblyOS - is Operating system that have ability to execute your assembly instructions easily
+## AssemblyOS - is Operating system that have ability to execute your assembly commands
 
 # Requirements:
 * nasm

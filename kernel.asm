@@ -164,8 +164,8 @@ move_cursor:
     push rax
     push rdx
     
-    inc BYTE [cursor_pos]
-    cmp BYTE [cursor_pos], 254
+    inc WORD [cursor_pos]
+    cmp WORD [cursor_pos], 254
     jae .limit_cursor
     
     .continue_cursor:
@@ -173,22 +173,22 @@ move_cursor:
         mov al, 0x0F
         out dx, al
         mov dx, 0x3D5
-        mov al, BYTE [cursor_pos] ; position from the left
-        out dx, al
+        mov ax, WORD [cursor_pos] ; position from the left
+        out dx, ax
         
         pop rdx
         pop rax
         ret
 
     .limit_cursor:
-        dec BYTE [cursor_pos]
+        dec WORD [cursor_pos]
 
         mov dx, 0x3D4
         mov al, 0x0F
         out dx, al
         mov dx, 0x3D5
-        mov al, BYTE [cursor_pos] ; position from the left
-        out dx, al
+        mov ax, WORD [cursor_pos] ; position from the left
+        out dx, ax
 
         pop rdx
         pop rax
@@ -207,7 +207,7 @@ check_needed_symbols:
     ; maximum 0x0B8EFE
     
     xor rdx, rdx
-    mov ch, 0x0E ; 0x0E and not 0x0F cuz of 0x0E can be printed even if error occured
+    mov ch, 0x0F
     mov cl, 0
     
     cmp al, 8
@@ -230,8 +230,6 @@ check_needed_symbols:
         add rcx, rdx
         mov ah, [rcx]
         
-        jmp .correct_name1
-
         .correct_name1:
             cmp al, ah
             jz .correct_name2
@@ -279,7 +277,7 @@ check_needed_symbols:
     .execute_command:
         call clear_all_chars
         call main_function
-        mov rbx, 5
+        mov rbx, 6
         call delay
         pop rax
         pop rdi
@@ -294,7 +292,7 @@ check_needed_symbols:
         cmp al, 8
         jne .exit1
         
-        cmp BYTE [cursor_pos], 0 ; if backspace is pressed we discard this symbol instead of printing trash
+        cmp WORD [cursor_pos], 0 ; if backspace is pressed we discard this symbol instead of printing trash
         je .exit2
         
         mov rax, 0x0B8000
@@ -305,15 +303,15 @@ check_needed_symbols:
         add ax, dx
         mov [rax], cl
 
-        dec BYTE [cursor_pos] 
+        dec WORD [cursor_pos] 
 
         mov dx, 0x3D4
         mov al, 0x0F
         out dx, al
 
         mov dx, 0x3D5
-        mov al, BYTE [cursor_pos] ; new position of the cursor
-        out dx, al
+        mov ax, WORD [cursor_pos] ; new position of the cursor
+        out dx, ax
         
         pop rax 
         pop rdi 
@@ -350,7 +348,7 @@ clear_all_chars:
     push rax
     
     mov rax, 0x0B8000
-    mov ch, 0x0E ; 0x0E and not 0x0F cuz of 0x0E can be printed even if error occured
+    mov ch, 0x0F
     mov cl, 0
     .clear_loop:
         cmp rax, 0x0B8EFE
@@ -360,7 +358,7 @@ clear_all_chars:
         jmp .clear_loop
     
     .clear_exit:
-        mov BYTE [cursor_pos], 0 
+        mov WORD [cursor_pos], 0 
         mov dx, 0x3D4
         mov al, 0x0F
         out dx, al
@@ -425,7 +423,7 @@ gdt_descriptor:
 %include "example.asm"
 
 
-cursor_pos db 0
+cursor_pos dw 0
 
 
 times 4096-($-$$) db 0 ; 512 > SIZE < 31744 (NOTE THAT IF SIZE WILL BE OVER 4096 BYTES, NEED TO CHANGE ADDRESSES in 'protected_mode' label)
