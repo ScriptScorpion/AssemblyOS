@@ -1,14 +1,14 @@
-## AssemblyOS - is Operating system that have ability to execute your assembly commands
+# AssemblyOS - is Operating system that have ability to execute your assembly commands
 
-# Requirements:
+## Requirements:
 * nasm
 * make
 * qemu-system-x86_64
 
-# Installation:
+## Installation:
 * Enter project directory and run `make`
 
-# Guide:
+## Guide:
 * How create your assembly command:
     1. Open 'example.asm' file.
     2. Define name of the command.
